@@ -22,20 +22,46 @@
 
 module simulation(
 
+  );
+  reg clk = 1;
+  always #2 clk = ~clk; //10ns period, 100 MHz.
+  
+  wire [7:0] led;
+  localparam mslimit = 100;
+  integer num_errors = 0;
+  integer num_checks = 0;
+  top #(.ms_limit(mslimit)) top (.clk(clk), .led(led));
+  wire [7:0] model_seconds;
+  
+  initial
+    begin
+      wait (model_seconds == 20);
+      $display("Simulation complete at time %0fns.",$realtime);
+      if (num_errors > 0)
+        display("*** Simulation FAILED %0d/%0d",num_errors,num_checks);
+      else
+        $display("*** Simulation PASSED %0d/%0d",num_errors,num_checks);
+      //repeat (600) @(posedge clk);
+      $finish;
+    end
+
+  model
+    #(.ms_limit(mslimit))
+    model
+    (
+      .clk(clk),
+      .seconds(model_seconds)
     );
-    reg clk = 1;
-    always #2 clk = ~clk; //10ns period, 100 MHz.
-    
-    
-    reg [6:0] ssd; // SSD, the seven segment display, 7 bits, one reserved for control
-    wire [7:0] led;
-    
-    top #(.ms_limit(3)) top (.clk(clk), .led(led));
-    
-    initial
-      begin
-        repeat (600) @(posedge clk);
-        $finish;
-      end
-    
+
+  always @(posedge clk)
+    begin
+      num_checks = num_checks+1;
+      if (led != model_seconds)
+        begin
+          $display("ERROR: digits value %0x does not match expected value %0x at time %0fns",
+          led,model_seconds,$realtime);
+        num_errors = num_errors+1;
+        end
+    end
+
 endmodule
