@@ -24,21 +24,27 @@ module simulation(
 
   );
   reg clk = 1;
+  reg [4:0] btn = 5'b00000; // start!
   always #2 clk = ~clk; //10ns period, 100 MHz.
   
   wire [7:0] led;
-  localparam mslimit = 100;
+  localparam mslimit = 50;
+  localparam sec_limit = 50;
   integer num_errors = 0;
   integer num_checks = 0;
-  top #(.ms_limit(mslimit)) top (.clk(clk), .led(led));
+  top #(.ms_limit(mslimit), .sec_limit(sec_limit)) top (.clk(clk), .led(led), .btn(btn));
   wire [7:0] model_seconds;
   
   initial
     begin
+      #3 btn = 5'b00100; //start
+      #8 btn = 5'b00000; //stop pressing button
+      #400 btn = 5'b10000; //stop
+      #408 btn = 5'b00000; //stop
       wait (model_seconds == 20);
       $display("Simulation complete at time %0fns.",$realtime);
       if (num_errors > 0)
-        display("*** Simulation FAILED %0d/%0d",num_errors,num_checks);
+        $display("*** Simulation FAILED %0d/%0d",num_errors,num_checks);
       else
         $display("*** Simulation PASSED %0d/%0d",num_errors,num_checks);
       //repeat (600) @(posedge clk);

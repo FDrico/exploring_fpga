@@ -5,13 +5,16 @@ module model
     )
   (
    input clk,
-   output [7:0] seconds
+   output reg [7:0] seconds
    );
-  
+
   integer counter = 0;
   always @(posedge clk)
     counter <= counter+1;
 
-  assign seconds = counter / (ms_limit * 1000);
+  always @(posedge clk) begin
+    seconds <= counter / (ms_limit * 1000);
+  end
+  //assign seconds = counter / (ms_limit * 1000);
 
 endmodule
